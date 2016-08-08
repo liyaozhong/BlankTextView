@@ -52,8 +52,8 @@
     }
     self.editable = NO;
     self.selectable = NO;
-    attributes = @{NSFontAttributeName : [UIFont systemFontOfSize:DEFAULT_FONT_SIZE], NSUnderlineStyleAttributeName:[NSNumber numberWithInteger:NSUnderlineStyleSingle]};
-    [self.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName : [UIFont systemFontOfSize:DEFAULT_FONT_SIZE]}]];
+    attributes = @{NSFontAttributeName : [UIFont systemFontOfSize:DEFAULT_FONT_SIZE]};
+    [self.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:text attributes:attributes]];
     singleLineHeight = [self.text sizeWithAttributes:attributes].height;
     CGSize afterSize = [self sizeThatFits:CGSizeMake(width, MAXFLOAT)];
     return afterSize.height;
@@ -94,13 +94,12 @@
         newLine = YES;
         blankContent = [NSString stringWithFormat:@"\n%@\n", blankContent];
     }else{
-        blankContent = [NSString stringWithFormat:@" %@ ", blankContent];
+        blankContent = [NSString stringWithFormat:@"%@ ", blankContent];
     }
     
     [self.textStorage insertAttributedString:[[NSAttributedString alloc] initWithString:blankContent attributes:attributes] atIndex:index];
 
-    NSRange rrr;
-    range = [self.layoutManager glyphRangeForCharacterRange:NSMakeRange(index + (newLine ? 1 : 0), blankContent.length - (newLine ? 2 : 0)) actualCharacterRange:&rrr];
+    range = [self.layoutManager glyphRangeForCharacterRange:NSMakeRange(index + (newLine ? 1 : 0), blankContent.length - (newLine ? 2 : 1)) actualCharacterRange:NULL];
     CGRect rect = [self.layoutManager boundingRectForGlyphRange:range inTextContainer:self.textContainer];
     
     UIView * blankView = [UIView new];
