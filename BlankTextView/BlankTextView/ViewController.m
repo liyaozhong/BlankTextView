@@ -8,6 +8,9 @@
 
 #import "ViewController.h"
 #import "BlankTextView.h"
+
+#define DEFAULT_BLANK_CONTENT  @"    "
+
 @interface ViewController ()<BlankTextViewDelegate>
 {
     BlankTextView * view;
@@ -63,12 +66,14 @@
     [str appendString:[contentStr substringWithRange:NSMakeRange(index, contentStr.length - index)]];
     
     contentStr = str;
-    blankHeightConstraint.constant = [view setInitialText:contentStr withWidth:self.view.bounds.size.width];
-    [view setUpBlanks:blanks];
-    
+    for(NSNumber * index in blankPoints){
+        Blank * blank = [[Blank alloc] initWithIndex:[index unsignedIntegerValue] blankContent:DEFAULT_BLANK_CONTENT isDefault:YES];
+        [blanks addObject:blank];
+    }
+    blankHeightConstraint.constant = [view setInitialText:contentStr withWidth:self.view.bounds.size.width defaultBlanks:blanks];
     
     //layout selection views
-    selections = @[@"1234567890",@"0987654321",@"qwer",@"asdfghjkl", @"zxcvbnmlkjhgfdsaqwertyuiop-zxcvbnmlkjhgfdsaqwertyuiop-zxcvbnmlkjhgfdsaqwertyuiop-zxcvbnmlkjhgfdsaqwertyuiop", @"zxcvbnmlkjhgfdsaqwertyuiop"];
+    selections = @[@"1234567890",@"0987654321",@"qwer",@"asdfghjkl", @"zxcvbnmlkjhgfdsaqwertyuiop-zxcvbnmlkjhgfdsaqwertyuiop-zxcvbnmlkjhgfdsaqwertyuiop-zxcvbnmlkjhgfdsaqwertyuiop", @"zxcvbnmlkjhgfdsaqwertyuiop", @"  ", @"   "];
     CGFloat horizontalGap = 10;
     CGFloat verticalGap = 5;
     CGFloat height = verticalGap;
@@ -114,19 +119,28 @@
     blankHeightConstraint.constant = height;
 }
 
-- (void) tapSelection : (UITapGestureRecognizer *) gesture
+- (void) blankTextView:(BlankTextView *)blankView blankSelected:(NSUInteger)index
 {
-    if(blanks.count == blankPoints.count){
-        return;
+    if(index < blanks.count){
+        Blank * blank = blanks[index];
+        if(!blank.isDefault){
+            blank.isDefault = YES;
+            blank.blankContent = DEFAULT_BLANK_CONTENT;
+        }
     }
-    NSUInteger index = [[blankPoints objectAtIndex:blanks.count] unsignedIntegerValue];
-    [blanks addObject:[[Blank alloc] initWithIndex:index blankContent:[selections objectAtIndex:gesture.view.tag]]];
     [view setUpBlanks:blanks];
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void) tapSelection : (UITapGestureRecognizer *) gesture
+{
+    for(Blank * blank in blanks){
+        if(blank.isDefault){
+            blank.blankContent = [selections objectAtIndex:gesture.view.tag];
+            blank.isDefault = NO;
+            break;
+        }
+    }
+    [view setUpBlanks:blanks];
 }
 
 @end
