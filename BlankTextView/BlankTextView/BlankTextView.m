@@ -11,13 +11,15 @@
 
 #define BLANK_TAG   999
 
+#define DEFAULT_FONT_SIZE  20
+
 @implementation Blank
-- (instancetype) initWithIndex : (NSInteger) index width : (CGFloat) width
+- (instancetype) initWithIndex : (NSInteger) index blankContent : (NSString *) blankContent
 {
     self = [super init];
     if(self){
         self.index = index;
-        self.width = width;
+        self.blankContent = blankContent;
     }
     return self;
 }
@@ -26,8 +28,10 @@
 @interface BlankTextView ()
 {
     CGFloat singleLineHeight;
-    NSMutableArray * exclusionPaths;
     CGFloat viewWidth;
+    CGFloat selectionMargin;
+    NSString * content;
+    NSDictionary * attributes;
 }
 @property (nonatomic, strong) NSMutableArray * blanks;
 @end
@@ -40,18 +44,17 @@
     if(!text){
         return 0;
     }
+    content = text;
     for(UIView * view in self.subviews){
         if(view.tag == BLANK_TAG){
             [view removeFromSuperview];
         }
     }
-    if(!exclusionPaths){
-        exclusionPaths = [NSMutableArray new];
-    }
     self.editable = NO;
     self.selectable = NO;
-    [self.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName : [UIFont systemFontOfSize:20]}]];
-    singleLineHeight = [self.text sizeWithAttributes:@{NSFontAttributeName : self.font, NSUnderlineStyleAttributeName:[NSNumber numberWithInteger:NSUnderlineStyleSingle]}].height;
+    attributes = @{NSFontAttributeName : [UIFont systemFontOfSize:DEFAULT_FONT_SIZE], NSUnderlineStyleAttributeName:[NSNumber numberWithInteger:NSUnderlineStyleSingle]};
+    [self.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName : [UIFont systemFontOfSize:DEFAULT_FONT_SIZE]}]];
+    singleLineHeight = [self.text sizeWithAttributes:attributes].height;
     CGSize afterSize = [self sizeThatFits:CGSizeMake(width, MAXFLOAT)];
     return afterSize.height;
 }
@@ -63,54 +66,52 @@
     }
     [_blanks removeAllObjects];
     [_blanks addObjectsFromArray:blanks];
-    [self setNeedsLayout];
-}
-
-- (void) layoutSubviews
-{
-    [super layoutSubviews];
-    if(!exclusionPaths){
-        return;
-    }
     for(UIView * view in self.subviews){
         if(view.tag == BLANK_TAG){
             [view removeFromSuperview];
         }
     }
-    [exclusionPaths removeAllObjects];
-    self.textContainer.exclusionPaths = exclusionPaths;
+    [self.textStorage replaceCharactersInRange:NSMakeRange(0, self.textStorage.length) withString:content];
+    NSInteger inc = 0;
     for(Blank * blank in self.blanks){
-        [self fillBlank:blank.index length:blank.width];
+        inc += [self fillBlank:(blank.index + inc) blankContent:blank.blankContent];
     }
-    self.textContainer.exclusionPaths = exclusionPaths;
     if(self.blankDelegate){
         CGSize size = [self sizeThatFits:CGSizeMake(viewWidth, MAXFLOAT)];
-        [self.blankDelegate blankTextView:self heightChanged:size.height];
+        [self.blankDelegate blankTextView:self heightChanged:size.height + selectionMargin];
     }
 }
 
-- (void) renderInTextView: (UIView *) blankView
+- (NSUInteger)fillBlank : (NSInteger) index blankContent : (NSString *) blankContent
 {
-    CGRect frame = [self convertRect:blankView.bounds fromView:blankView];
-    frame.origin.x -= self.textContainerInset.left;
-    frame.origin.y -= self.textContainerInset.top;
-    [exclusionPaths addObject:[UIBezierPath bezierPathWithRect:frame]];
-}
-
-- (void)fillBlank : (NSInteger) index length : (CGFloat) length
-{
-    CGPoint origin = [self.layoutManager boundingRectForGlyphRange:NSMakeRange(index, 1) inTextContainer:self.textContainer].origin;
-    if(length + origin.x > self.bounds.size.width){
-        origin.x = self.textContainerInset.left + self.textContainer.lineFragmentPadding;
-        origin.y += singleLineHeight;
+    NSRange range = [self.layoutManager glyphRangeForCharacterRange:NSMakeRange(index, 1) actualCharacterRange:NULL];
+    CGPoint origin = [self.layoutManager boundingRectForGlyphRange:range inTextContainer:self.textContainer].origin;
+    
+    CGSize size = [blankContent sizeWithAttributes:attributes];
+    
+    BOOL newLine = NO;
+    if(size.width + origin.x > (self.bounds.size.width - self.textContainerInset.right - self.textContainer.lineFragmentPadding) || size.height > singleLineHeight){
+        newLine = YES;
+        blankContent = [NSString stringWithFormat:@"\n%@\n", blankContent];
+    }else{
+        blankContent = [NSString stringWithFormat:@" %@ ", blankContent];
     }
+    
+    [self.textStorage insertAttributedString:[[NSAttributedString alloc] initWithString:blankContent attributes:attributes] atIndex:index];
+
+    NSRange rrr;
+    range = [self.layoutManager glyphRangeForCharacterRange:NSMakeRange(index + (newLine ? 1 : 0), blankContent.length - (newLine ? 2 : 0)) actualCharacterRange:&rrr];
+    CGRect rect = [self.layoutManager boundingRectForGlyphRange:range inTextContainer:self.textContainer];
+    
     UIView * blankView = [UIView new];
     blankView.tag = BLANK_TAG;
     blankView.layer.cornerRadius = 4;
     blankView.layer.borderWidth = 1;
     blankView.layer.borderColor = [UIColor blackColor].CGColor;
     [self addSubview:blankView];
-    blankView.frame = CGRectMake(origin.x, origin.y + self.textContainerInset.top, length, singleLineHeight);
-    [self renderInTextView:blankView];
+    rect.origin.y += self.textContainerInset.top;
+    blankView.frame = rect;
+    return blankContent.length;
 }
+
 @end

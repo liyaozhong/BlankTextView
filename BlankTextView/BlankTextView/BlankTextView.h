@@ -17,8 +17,8 @@
 
 @interface Blank : NSObject
 @property (nonatomic, assign) NSInteger index;
-@property (nonatomic, assign) CGFloat width;
-- (instancetype) initWithIndex : (NSInteger) index width : (CGFloat) width;
+@property (nonatomic, copy) NSString * blankContent;
+- (instancetype) initWithIndex : (NSInteger) index blankContent : (NSString *) blankContent;
 @end
 
 @interface BlankTextView : UITextView
