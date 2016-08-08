@@ -14,6 +14,7 @@
 @interface ViewController ()<BlankTextViewDelegate>
 {
     BlankTextView * view;
+    UIView * answersView;
     NSMutableArray * blanks;
     NSString * contentStr;
     NSMutableArray * blankPoints;
@@ -38,7 +39,7 @@
     blankHeightConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1 constant:100];
     [constraints addObject:blankHeightConstraint];
     
-    UIView * answersView = [UIView new];
+    answersView = [UIView new];
     answersView.backgroundColor = [UIColor brownColor];
     answersView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:answersView];
@@ -86,6 +87,8 @@
         label.userInteractionEnabled = YES;
         UITapGestureRecognizer * tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapSelection:)];
         [label addGestureRecognizer:tap];
+        UIPanGestureRecognizer * panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(pan:)];
+        [label addGestureRecognizer:panGesture];
         label.numberOfLines = 0;
         label.layer.borderColor = [UIColor grayColor].CGColor;
         label.layer.borderWidth = 1;
@@ -141,6 +144,59 @@
         }
     }
     [view setUpBlanks:blanks];
+}
+
+UILabel * dragingLable;
+CGPoint originPan;
+CGRect originFrame;
+NSInteger curIndex;
+- (void) pan : (UIPanGestureRecognizer *) gesture
+{
+    if (gesture.state == UIGestureRecognizerStateBegan) {
+        originPan = [gesture locationInView:self.view];
+        if(dragingLable){
+            [dragingLable removeFromSuperview];
+        }
+        UILabel * originLabel = (UILabel *) gesture.view;
+        originFrame = originLabel.frame;
+        dragingLable = [[UILabel alloc] initWithFrame:originFrame];
+        dragingLable.alpha = 0.8f;
+        dragingLable.numberOfLines = 0;
+        dragingLable.layer.borderColor = [UIColor grayColor].CGColor;
+        dragingLable.layer.borderWidth = 1;
+        dragingLable.layer.cornerRadius = 3;
+        dragingLable.layer.masksToBounds = YES;
+        dragingLable.font = [UIFont systemFontOfSize:20];
+        dragingLable.text = originLabel.text;
+        [answersView addSubview:dragingLable];
+    }else if(gesture.state == UIGestureRecognizerStateEnded){
+        if(dragingLable){
+            [dragingLable removeFromSuperview];
+        }
+        [view finishDrag];
+        if(curIndex != NSNotFound){
+            if(curIndex < blanks.count && curIndex > 0){
+                Blank * blank = blanks[curIndex];
+                blank.isDefault = NO;
+                blank.blankContent = dragingLable.text;
+            }
+            [view setUpBlanks:blanks];
+        }
+    }else{
+        CGPoint origin = [gesture locationInView:self.view];
+        CGRect frame = originFrame;
+        frame.origin.x += origin.x - originPan.x;
+        frame.origin.y += origin.y - originPan.y;
+        dragingLable.frame = frame;
+        CGPoint center = dragingLable.center;
+        center.y += blankHeightConstraint.constant;
+        curIndex = [view checkBlank:center];
+        if(curIndex != NSNotFound){
+            dragingLable.textColor = [UIColor redColor];
+        }else{
+            dragingLable.textColor = [UIColor blackColor];
+        }
+    }
 }
 
 @end

@@ -27,4 +27,6 @@
 @property (nonatomic, weak) id<BlankTextViewDelegate> blankDelegate;
 - (CGFloat) setInitialText : (NSString *) text withWidth : (CGFloat) width defaultBlanks : (NSArray<Blank*> *) defaultBlanks;
 - (void) setUpBlanks : (NSArray<Blank *> *) blanks;
+- (NSInteger) checkBlank : (CGPoint) center;
+- (void) finishDrag;
 @end

@@ -105,6 +105,30 @@
     }
 }
 
+- (NSInteger) checkBlank : (CGPoint) center
+{
+    for(UIView * view in self.subviews){
+        if(view.tag >= BLANK_TAG){
+            if(fabs(center.x - view.center.x) < 20 && fabs(center.y - view.center.y) < 20){
+                view.layer.borderColor = [UIColor redColor].CGColor;
+                return view.tag - BLANK_TAG;
+            }else{
+                view.layer.borderColor = [UIColor blackColor].CGColor;
+            }
+        }
+    }
+    return NSNotFound;
+}
+
+- (void) finishDrag
+{
+    for(UIView * view in self.subviews){
+        if(view.tag >= BLANK_TAG){
+            view.layer.borderColor = [UIColor blackColor].CGColor;
+        }
+    }
+}
+
 - (NSUInteger)fillBlank : (NSInteger) index blankContent : (NSString *) blankContent tag : (NSUInteger) tagIndex
 {
     NSRange range = [self.layoutManager glyphRangeForCharacterRange:NSMakeRange(index, 1) actualCharacterRange:NULL];
