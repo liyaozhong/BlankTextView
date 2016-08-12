@@ -143,9 +143,10 @@
     CGSize size = [blankContent sizeWithAttributes:attributes];
     
     BOOL newLine = NO;
-    if(size.width + origin.x > (self.bounds.size.width - self.textContainerInset.right - self.textContainer.lineFragmentPadding) || size.height > singleLineHeight){
+    CGFloat actWith = self.bounds.size.width - self.textContainerInset.right - self.textContainer.lineFragmentPadding;
+    if(size.width + origin.x > actWith){
         newLine = YES;
-        if(size.height > singleLineHeight){
+        if(size.width > actWith){
             blankContent = [NSString stringWithFormat:@"\n%@\n", blank.blankContent];
         }else{
             blankContent = [NSString stringWithFormat:@"\n%@ ", blank.blankContent];
