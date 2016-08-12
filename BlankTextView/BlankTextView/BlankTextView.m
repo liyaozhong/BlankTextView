@@ -90,6 +90,7 @@
 
 - (void) setUpBlanks : (NSArray<Blank *> *) blanks
 {
+    self.scrollEnabled = YES;
     if(!_blanks){
         _blanks = [NSMutableArray new];
     }
@@ -106,6 +107,7 @@
         CGSize size = [self sizeThatFits:CGSizeMake(viewWidth, MAXFLOAT)];
         [self.blankDelegate blankTextView:self heightChanged:size.height + selectionMargin];
     }
+    self.scrollEnabled = NO;
 }
 
 - (NSInteger) checkBlank : (CGPoint) center
