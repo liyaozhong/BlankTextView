@@ -114,7 +114,7 @@
 {
     for(UIView * view in self.subviews){
         if(view.tag >= BLANK_TAG){
-            if(fabs(center.x - view.center.x) < 20 && fabs(center.y - view.center.y) < 20){
+            if(CGRectContainsPoint(view.frame, center)){
                 view.layer.borderColor = [UIColor redColor].CGColor;
                 return view.tag - BLANK_TAG;
             }else{

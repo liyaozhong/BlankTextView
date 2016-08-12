@@ -175,7 +175,7 @@ NSInteger curIndex;
         }
         [view finishDrag];
         if(curIndex != NSNotFound){
-            if(curIndex < blanks.count && curIndex > 0){
+            if(curIndex < blanks.count && curIndex >= 0){
                 Blank * blank = blanks[curIndex];
                 blank.isDefault = NO;
                 blank.blankContent = dragingLable.text;
