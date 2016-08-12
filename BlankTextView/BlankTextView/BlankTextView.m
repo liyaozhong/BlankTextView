@@ -58,7 +58,10 @@
     self.editable = NO;
     self.selectable = NO;
     [self resetView];
-    attributes = @{NSFontAttributeName : [UIFont systemFontOfSize:DEFAULT_FONT_SIZE]};
+    NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+    paragraphStyle.lineSpacing = 10;
+    attributes = @{NSFontAttributeName : [UIFont systemFontOfSize:DEFAULT_FONT_SIZE],
+                   NSParagraphStyleAttributeName : paragraphStyle};
     [self.textStorage setAttributedString:[[NSAttributedString alloc] initWithString:text attributes:attributes]];
     singleLineHeight = [self.text sizeWithAttributes:attributes].height;
     CGSize afterSize = [self sizeThatFits:CGSizeMake(width, MAXFLOAT)];
@@ -148,6 +151,13 @@
 
     range = [self.layoutManager glyphRangeForCharacterRange:NSMakeRange(index + (newLine ? 1 : 0), blankContent.length - (newLine ? 2 : 1)) actualCharacterRange:NULL];
     CGRect rect = [self.layoutManager boundingRectForGlyphRange:range inTextContainer:self.textContainer];
+    
+    
+    NSDictionary * attr = [self.attributedText attributesAtIndex:range.location effectiveRange:NULL];
+    if(attr[NSParagraphStyleAttributeName]){
+        NSMutableParagraphStyle * paragraphStyle = attr[NSParagraphStyleAttributeName];
+        rect.size.height -= paragraphStyle.lineSpacing;
+    }
     
     UIControl * blankView = [UIControl new];
     [blankView addTarget:self action:@selector(onBlankClick:) forControlEvents:UIControlEventTouchUpInside];
