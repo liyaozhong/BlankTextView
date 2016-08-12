@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "BlankTextView.h"
 
-#define DEFAULT_BLANK_CONTENT  @"    "
+#define DEFAULT_BLANK_CONTENT  @"MMMM"
 
 @interface ViewController ()<BlankTextViewDelegate>
 {

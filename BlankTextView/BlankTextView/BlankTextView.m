@@ -100,7 +100,7 @@
     NSInteger inc = 0;
     for(NSUInteger i = 0; i < self.blanks.count; i ++){
         Blank * blank = [self.blanks objectAtIndex:i];
-        inc += [self fillBlank:(blank.index + inc) blankContent:blank.blankContent tag:i];
+        inc += [self fillBlank:(blank.index + inc) blankContent:blank tag:i];
     }
     if(self.blankDelegate){
         CGSize size = [self sizeThatFits:CGSizeMake(viewWidth, MAXFLOAT)];
@@ -132,8 +132,9 @@
     }
 }
 
-- (NSUInteger)fillBlank : (NSInteger) index blankContent : (NSString *) blankContent tag : (NSUInteger) tagIndex
+- (NSUInteger)fillBlank : (NSInteger) index blankContent : (Blank*) blank tag : (NSUInteger) tagIndex
 {
+    NSString * blankContent = blank.blankContent;
     NSRange range = [self.layoutManager glyphRangeForCharacterRange:NSMakeRange(index, 1) actualCharacterRange:NULL];
     CGPoint origin = [self.layoutManager boundingRectForGlyphRange:range inTextContainer:self.textContainer].origin;
     
@@ -142,18 +143,18 @@
     BOOL newLine = NO;
     if(size.width + origin.x > (self.bounds.size.width - self.textContainerInset.right - self.textContainer.lineFragmentPadding) || size.height > singleLineHeight){
         newLine = YES;
-        blankContent = [NSString stringWithFormat:@"\n%@\n", blankContent];
+        blankContent = [NSString stringWithFormat:@"\n%@\n", blank.blankContent];
     }else{
-        blankContent = [NSString stringWithFormat:@"%@ ", blankContent];
+        blankContent = [NSString stringWithFormat:@"%@ ", blank.blankContent];
     }
-    
-    [self.textStorage insertAttributedString:[[NSAttributedString alloc] initWithString:blankContent attributes:attributes] atIndex:index];
-
+    NSMutableDictionary * attr = [NSMutableDictionary dictionaryWithDictionary:attributes];
+    if(blank.isDefault){
+        [attr addEntriesFromDictionary:@{NSForegroundColorAttributeName:[UIColor clearColor]}];
+    }
+    [self.textStorage insertAttributedString:[[NSAttributedString alloc] initWithString:blankContent attributes:attr] atIndex:index];
     range = [self.layoutManager glyphRangeForCharacterRange:NSMakeRange(index + (newLine ? 1 : 0), blankContent.length - (newLine ? 2 : 1)) actualCharacterRange:NULL];
     CGRect rect = [self.layoutManager boundingRectForGlyphRange:range inTextContainer:self.textContainer];
     
-    
-    NSDictionary * attr = [self.attributedText attributesAtIndex:range.location effectiveRange:NULL];
     if(attr[NSParagraphStyleAttributeName]){
         NSMutableParagraphStyle * paragraphStyle = attr[NSParagraphStyleAttributeName];
         rect.size.height -= paragraphStyle.lineSpacing;
