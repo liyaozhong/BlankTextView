@@ -145,7 +145,11 @@
     BOOL newLine = NO;
     if(size.width + origin.x > (self.bounds.size.width - self.textContainerInset.right - self.textContainer.lineFragmentPadding) || size.height > singleLineHeight){
         newLine = YES;
-        blankContent = [NSString stringWithFormat:@"\n%@\n", blank.blankContent];
+        if(size.height > singleLineHeight){
+            blankContent = [NSString stringWithFormat:@"\n%@\n", blank.blankContent];
+        }else{
+            blankContent = [NSString stringWithFormat:@"\n%@ ", blank.blankContent];
+        }
     }else{
         blankContent = [NSString stringWithFormat:@"%@ ", blank.blankContent];
     }
